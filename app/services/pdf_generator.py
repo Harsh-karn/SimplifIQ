@@ -81,8 +81,8 @@ def generate_pdf_report(name: str, company_name: str, enriched_data: dict) -> st
     pdf.set_text_color(100, 100, 100)
     pdf.multi_cell(0, 7, "This is an automated analysis generated to demonstrate our contextual understanding of your business. We look forward to a deeper discussion.")
 
-    # Save PDF
-    reports_dir = "reports"
+    # Save PDF to /tmp (required for Vercel Serverless Functions)
+    reports_dir = "/tmp"
     os.makedirs(reports_dir, exist_ok=True)
     
     # Create safe filename

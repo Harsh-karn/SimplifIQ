@@ -68,27 +68,21 @@ async def serve_form(request: Request):
 
 @app.post("/submit")
 async def submit_lead(
-    background_tasks: BackgroundTasks,
     name: str = Form(...),
     email: str = Form(...),
     company_name: str = Form(...),
     website_url: str = Form(...)
 ):
     """
-    Captures lead info, validates, and triggers the background workflow.
+    Captures lead info, validates, and triggers the workflow synchronously (Vercel compatible).
     """
-    # Validation is implicitly handled by FastAPI Form typing, but we can add more robust checks
     if not name or not email or not company_name or not website_url:
         return JSONResponse(status_code=400, content={"error": "All fields are required."})
         
-    # Trigger background task for the workflow so the user doesn't wait
-    background_tasks.add_task(
-        process_lead_workflow, 
-        name, 
-        email, 
-        company_name, 
-        website_url
-    )
+    # Run the workflow directly. Vercel Serverless freezes processes after the response is sent,
+    # so background tasks are not supported.
+    process_lead_workflow(name, email, company_name, website_url)
     
     return {"message": "Lead received successfully! We are generating your personalized report and will email it shortly."}
+
 
