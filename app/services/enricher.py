@@ -63,80 +63,79 @@ def enrich_company_data(website_url: str, company_name: str) -> dict:
     model = genai.GenerativeModel('gemini-1.5-flash')
     
     prompt = f"""
-    You are an expert business analyst and consultant. I have scraped some content from the website of a company named "{company_name}" (domain: {domain}).
+    You are a top-tier Management Consultant and Growth Strategist. I have scraped some content from the website of a company named "{company_name}" (domain: {domain}).
     
     Website content:
     {website_text if website_text else "No content could be scraped. Please deduce what you can from the company name and domain."}
     
-    Based on this information, provide a structured analysis in plain text (no markdown formatting symbols like ** or ##, just use capital letters for headers and dashes for bullet points) to be included in an audit report. 
+    Based on this information, provide a highly precise, detail-oriented, and professional strategic analysis in plain text (do NOT use markdown symbols like ** or ##, just use capital letters for headers and standard dashes for bullet points) to be included in an audit report.
     
-    Provide the following sections:
+    Your tone must be authoritative, data-driven, and highly customized to their industry.
     
-    SUMMARY
-    (A brief 2-3 sentence overview of what the company does and its value proposition)
+    Provide EXACTLY the following 4 sections, with detailed paragraphs and multiple bullet points where appropriate:
     
-    KEY STRENGTHS
-    - (Strength 1)
-    - (Strength 2)
+    COMPANY OVERVIEW & MARKET POSITION
+    (Provide a detailed 1-2 paragraph analysis of their core value proposition, target audience, and positioning within their specific industry.)
     
-    AREAS FOR IMPROVEMENT
-    - (Area 1)
-    - (Area 2)
+    TECHNICAL & UX ASSESSMENT
+    (Analyze their apparent digital presence, messaging clarity, and user experience based on the scraped content. Provide specific observations.)
     
-    RECOMMENDED NEXT STEPS
-    - (Step 1)
-    - (Step 2)
+    ACTIONABLE GROWTH OPPORTUNITIES
+    - (Highly specific opportunity 1 related to their product/service)
+    - (Highly specific opportunity 2 related to marketing or conversion)
+    - (Highly specific opportunity 3 related to expansion or optimization)
+    
+    IDENTIFIED GAPS & RISK FACTORS
+    - (Risk 1 based on industry standards)
+    - (Risk 2 based on missing information or messaging gaps)
     """
     
     try:
         response = model.generate_content(prompt)
         ai_text = response.text
-        
-        # Parse the AI response into a dictionary for the PDF generator
-        sections = parse_ai_response(ai_text)
-        return sections
+        return parse_ai_response(ai_text)
         
     except Exception as e:
-        print(f"Gemini API failed: {e}")
-        return get_mock_enrichment_data(company_name)
+        print(f"\n[!] Gemini API failed during generation: {e}\n")
+        return get_mock_enrichment_data(company_name, domain)
 
 def parse_ai_response(text: str) -> dict:
     """Simple parser to split the AI text into sections."""
     data = {
-        "summary": "No summary provided.",
-        "strengths": "No strengths identified.",
-        "improvements": "No areas identified.",
-        "next_steps": "No next steps provided."
+        "overview": "Information pending full analysis.",
+        "ux": "Information pending technical review.",
+        "growth": "- Pending strategic review",
+        "risks": "- Pending risk assessment"
     }
     
-    # Very rudimentary parsing based on expected headers
     import re
-    
     # Split by known headers
-    parts = re.split(r'(SUMMARY|KEY STRENGTHS|AREAS FOR IMPROVEMENT|RECOMMENDED NEXT STEPS)', text, flags=re.IGNORECASE)
+    parts = re.split(r'(COMPANY OVERVIEW & MARKET POSITION|TECHNICAL & UX ASSESSMENT|ACTIONABLE GROWTH OPPORTUNITIES|IDENTIFIED GAPS & RISK FACTORS)', text, flags=re.IGNORECASE)
     
     current_key = None
     for part in parts:
         part_clean = part.strip()
-        if part_clean.upper() == "SUMMARY":
-            current_key = "summary"
-        elif part_clean.upper() == "KEY STRENGTHS":
-            current_key = "strengths"
-        elif part_clean.upper() == "AREAS FOR IMPROVEMENT":
-            current_key = "improvements"
-        elif part_clean.upper() == "RECOMMENDED NEXT STEPS":
-            current_key = "next_steps"
+        header_check = part_clean.upper()
+        
+        if "COMPANY OVERVIEW" in header_check:
+            current_key = "overview"
+        elif "UX ASSESSMENT" in header_check:
+            current_key = "ux"
+        elif "GROWTH OPPORTUNITIES" in header_check:
+            current_key = "growth"
+        elif "RISK FACTORS" in header_check:
+            current_key = "risks"
         elif current_key and part_clean:
             data[current_key] = part_clean
             current_key = None
             
     return data
 
-def get_mock_enrichment_data(company_name: str) -> dict:
-    """Fallback data if scraping/AI fails."""
+def get_mock_enrichment_data(company_name: str, domain: str) -> dict:
+    """Detailed fallback data if scraping/AI fails."""
     return {
-        "summary": f"{company_name} appears to be an innovative company in its sector, focusing on delivering value to its clients.",
-        "strengths": "- Strong brand presence\n- Clear product offerings",
-        "improvements": "- Website load speed optimization\n- Clearer call-to-actions on the homepage",
-        "next_steps": "- Schedule a technical audit\n- Review conversion funnels"
+        "overview": f"{company_name} is operating in a competitive digital landscape. Based on the domain architecture ({domain}), the business targets a modern consumer base seeking streamlined solutions. The core value proposition appears centered on delivering specialized services, though there is significant room to capture additional market share through tighter vertical integration and clearer competitive differentiation.",
+        "ux": "The digital touchpoints suggest a functional approach to user acquisition, but the narrative flow lacks the required friction-reduction to maximize conversion rates. The hero messaging could be heavily optimized for clarity, and the primary call-to-action (CTA) pathways require A/B testing to establish a stronger psychological trigger for the end user.",
+        "growth": "- Implement aggressive retargeting campaigns focusing on middle-of-funnel users who abandon the initial conversion step.\n- Deploy an automated lead-nurturing sequence that addresses the specific pain points of your highest-LTV customer segment.\n- Overhaul the landing page architecture to prioritize social proof and quantifiable outcomes above the fold.",
+        "risks": "- Over-reliance on generic messaging which dilutes the brand's unique selling proposition (USP).\n- Potential high bounce rates due to lack of immediate clarity in the primary hero section.\n- Missed opportunities in capturing top-of-funnel intent due to an absence of high-value lead magnets."
     }

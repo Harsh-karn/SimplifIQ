@@ -70,10 +70,10 @@ def generate_pdf_report(name: str, company_name: str, enriched_data: dict) -> st
         pdf.ln(8)
 
     # Add Enriched Data Sections
-    add_section("1. Executive Summary", enriched_data.get('summary', 'Information pending.'))
-    add_section("2. Key Strengths Identified", enriched_data.get('strengths', 'Information pending.'))
-    add_section("3. Areas for Potential Optimization", enriched_data.get('improvements', 'Information pending.'))
-    add_section("4. Recommended Next Steps", enriched_data.get('next_steps', 'Information pending.'))
+    add_section("1. Company Overview & Market Position", enriched_data.get('overview', 'Information pending.'))
+    add_section("2. Technical & UX Assessment", enriched_data.get('ux', 'Information pending.'))
+    add_section("3. Actionable Growth Opportunities", enriched_data.get('growth', 'Information pending.'))
+    add_section("4. Identified Gaps & Risk Factors", enriched_data.get('risks', 'Information pending.'))
 
     # Outro
     pdf.ln(10)
