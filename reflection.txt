@@ -1,0 +1,27 @@
+# Reflection on the SimplifIQ Lead Intake Assessment
+
+## 1. Overall Approach and Thought Process
+My primary goal was to build a system that not only works end-to-end but is resilient enough to handle real-world edge cases. A workflow that relies on web scraping, an LLM, and email delivery has multiple potential points of failure. Therefore, I prioritized graceful degradation (using high-quality fallback mock data) to ensure the user always receives a professional PDF report, even if an external API or scraping attempt fails.
+
+I chose Python with FastAPI because it is the industry standard for AI orchestration and allows for rapid development of both the web interface and the backend logic.
+
+## 2. Key Challenges & Solutions
+
+*   **Serverless Constraints (Vercel Deployment):**
+    Initially, I utilized `FastAPI.BackgroundTasks` so the user would receive an instant HTTP response while the slow PDF generation and email dispatch happened in the background. However, knowing that serverless environments (like Vercel or AWS Lambda) instantly freeze the execution context once the HTTP response is sent, I consciously refactored the workflow to run synchronously. This ensures the email is definitively dispatched before the process sleeps.
+    
+*   **PDF Generation Portability:**
+    Many HTML-to-PDF libraries (like `pdfkit`) require heavy OS-level binaries (like `wkhtmltopdf`) to be installed. I actively chose `fpdf2` because it is a pure Python library. While it requires manual layout programming, it guarantees the code will run seamlessly on any serverless platform without custom buildpacks. I also modified it to save the PDF to `/tmp` to respect Vercel's read-only file system.
+
+*   **Handling Unpredictable AI Outputs:**
+    LLMs can sometimes output unexpected formatting. I engineered the prompt to strongly enforce a standardized 4-section text output without markdown symbols. I then wrote a RegEx-based parsing engine to split the output into a dictionary so the PDF generator could render the sections uniformly.
+
+## 3. What I Would Do With More Time (Productionizing)
+
+If I were taking this prototype to a true production environment, I would make the following upgrades:
+
+1.  **True Asynchronous Message Queuing:** Instead of running the workflow synchronously, I would integrate a message broker (like Redis + Celery, or AWS SQS). The FastAPI endpoint would simply push a "Lead Received" event to the queue and instantly return a 202 Accepted. A separate worker would pick up the job, allowing for automated retries on failure.
+2.  **Advanced Web Scraping:** Currently, the system uses `BeautifulSoup` to parse raw HTML. This fails on modern Single Page Applications (SPAs) built with React/Vue. I would upgrade the scraper to use a headless browser (like Playwright) to fully render the DOM and execute JavaScript before extracting the text.
+3.  **LLM Structured Outputs:** Instead of parsing raw text, I would utilize Gemini's structured output capabilities (or OpenAI's JSON mode) to force the LLM to return a strictly typed JSON object, eliminating parsing errors entirely.
+
+Building this was an excellent exercise in balancing feature completeness with robust error handling and deployment constraints!
