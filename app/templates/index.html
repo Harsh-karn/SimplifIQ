@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimplifIQ - AI Lead Intake</title>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --bg: #F9FAFB;
+            --surface: #FFFFFF;
+            --text: #111827;
+            --text-secondary: #4B5563;
+            --border: #E5E7EB;
+        }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: var(--surface);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            width: 100%;
+            max-width: 450px;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        p.subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+        input[type="text"], input[type="email"], input[type="url"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: border-color 0.15s ease-in-out;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.15s ease-in-out;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+        #success-message {
+            display: none;
+            background-color: #DEF7EC;
+            color: #03543F;
+            padding: 16px;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-size: 14px;
+            text-align: center;
+            border: 1px solid #31C48D;
+        }
+        #error-message {
+            display: none;
+            background-color: #FDE8E8;
+            color: #9B1C1C;
+            padding: 16px;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-size: 14px;
+            text-align: center;
+            border: 1px solid #F8B4B4;
+        }
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Get Your Personalized Report</h1>
+    <p class="subtitle">Enter your company details below, and we'll instantly generate and email an AI-driven audit of your business.</p>
+
+    <form id="leadForm">
+        <div class="form-group">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name" required placeholder="John Doe">
+        </div>
+        
+        <div class="form-group">
+            <label for="email">Work Email</label>
+            <input type="email" id="email" name="email" required placeholder="john@example.com">
+        </div>
+        
+        <div class="form-group">
+            <label for="company_name">Company Name</label>
+            <input type="text" id="company_name" name="company_name" required placeholder="Acme Corp">
+        </div>
+        
+        <div class="form-group">
+            <label for="website_url">Company Website</label>
+            <input type="url" id="website_url" name="website_url" required placeholder="https://acme.com">
+        </div>
+        
+        <button type="submit" id="submitBtn">Generate My Report</button>
+    </form>
+
+    <div id="success-message">
+        <strong>Success!</strong> Your details have been received. We are generating your personalized report and will email it to you shortly.
+    </div>
+    
+    <div id="error-message">
+        <strong>Oops!</strong> Something went wrong. Please try again.
+    </div>
+</div>
+
+<script>
+    document.getElementById('leadForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const form = e.target;
+        const submitBtn = document.getElementById('submitBtn');
+        const successMsg = document.getElementById('success-message');
+        const errorMsg = document.getElementById('error-message');
+        
+        // Reset states
+        successMsg.style.display = 'none';
+        errorMsg.style.display = 'none';
+        submitBtn.classList.add('loading');
+        submitBtn.textContent = 'Processing...';
+        
+        const formData = new FormData(form);
+        
+        try {
+            const response = await fetch('/submit', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                form.reset();
+                successMsg.style.display = 'block';
+            } else {
+                errorMsg.style.display = 'block';
+                const data = await response.json();
+                if(data.error) errorMsg.textContent = data.error;
+            }
+        } catch (error) {
+            errorMsg.style.display = 'block';
+        } finally {
+            submitBtn.classList.remove('loading');
+            submitBtn.textContent = 'Generate My Report';
+        }
+    });
+</script>
+
+</body>
+</html>
